@@ -1,0 +1,16 @@
+{
+  "name": "statbot",
+  "version": "0.0.1",
+  "description": "Slack time statistics aggregator",
+  "main": "statbot.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Ben Saufley <contact@bensaufley.com>",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^2.0.0",
+    "request": "^2.75.0",
+    "request-promise": "^4.1.1"
+  }
+}
