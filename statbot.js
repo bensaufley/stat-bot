@@ -4,7 +4,8 @@ const SLACK_TOKEN = process.env.SLACK_TOKEN,
       CHANNELS = process.env.CHANNELS.split(','),
       TIME_REGEX = /(\d+)?[:`](\d{1,2})(?!\d|:)/;
 
-const request = require('request-promise');
+const request = require('request-promise'),
+      StatBotRenderer = require('./statbot-renderer');
 
 module.exports = class StatBot {
   constructor(date = new Date(), debug = false) {
@@ -39,7 +40,7 @@ module.exports = class StatBot {
 
   getRankings() {
     return this.getUsers()
-      .then(() => Promise.all(CHANNELS.map(id => this.getMessages(id))))
+      .then(() => Promise.all(CHANNELS.map(id => this.getMessages(id) )))
       .then((data) => {
         data.forEach((response) => {
           if (this.debug) { console.log(response); }
@@ -64,31 +65,29 @@ module.exports = class StatBot {
   }
 
   generateRankings(messages) {
-    return messages.filter(m => TIME_REGEX.test(m.text))
+    let rankings = messages.filter(m => TIME_REGEX.test(m.text))
       .map(this.processMessages.bind(this)).sort(this.rankSort.bind(this));
   }
 
   processMessages(m) {
     let user = this.users.filter(u=>u.id == m.user)[0],
-        result = m.text.match(TIME_REGEX).splice(1,2).map(i=>i && parseInt(i, 10));
+        result = m.text.match(TIME_REGEX).splice(1,2).map(i=>i && parseInt(i, 10)),
+        seconds = result[0] * 60 + result[1];
     return {
       name: user.profile.real_name || user.profile.name,
-      result: result,
-      formattedResult: this.timeFormat(...result),
+      result: seconds,
       text: m.text,
       when: new Date(parseFloat(m.ts, 10) * 1000)
     };
   }
 
-  timeFormat(min, sec) {
-    return `${min || 0}:${sec.toString().length < 2 ? `0${sec}` : sec}`;
+  render(rankings) {
+    return new StatBotRenderer(rankings, this.timeFormat);
   }
 
   rankSort(a, b) {
-    if (a.result[0] < b.result[0]) return -1;
-    if (a.result[0] > b.result[0]) return 1;
-    if (a.result[1] < b.result[1]) return -1;
-    if (a.result[1] > b.result[1]) return 1;
+    if (a.result < b.result) return -1;
+    if (a.result > b.result) return 1;
     if (a.name[1] < a.name[1]) return -1;
     if (a.name[1] > a.name[1]) return 1;
     if (a.name[0] < a.name[0]) return -1;

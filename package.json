@@ -13,7 +13,9 @@
   "author": "Ben Saufley <contact@bensaufley.com>",
   "license": "ISC",
   "dependencies": {
+    "d3-node": "^0.2.0",
     "dotenv": "^2.0.0",
+    "extend": "^3.0.0",
     "request": "^2.75.0",
     "request-promise": "^4.1.1"
   }
