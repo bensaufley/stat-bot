@@ -1,0 +1,23 @@
+svg {
+  background: #fff;
+  color: #333;
+  font-family: sans-serif;
+  font-weight: 300;
+}
+
+.bar {
+  fill: #666;
+  stroke: rgb(0, 0, 0, .6);
+}
+
+.bar.first {
+  fill: #ccc;
+}
+
+.bar.above-average {
+  fill: #999;
+}
+
+.bar.dnf {
+  fill: #333;
+}

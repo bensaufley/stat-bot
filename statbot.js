@@ -5,6 +5,8 @@ const SLACK_TOKEN = process.env.SLACK_TOKEN,
       TIME_REGEX = /(\d+)?[:`](\d{1,2})(?!\d|:)/;
 
 const request = require('request-promise'),
+      fs = require('pn/fs'),
+      svg2png = require('svg2png'),
       StatBotRenderer = require('./statbot-renderer');
 
 module.exports = class StatBot {
@@ -43,7 +45,7 @@ module.exports = class StatBot {
       .then(() => Promise.all(CHANNELS.map(id => this.getMessages(id) )))
       .then((data) => {
         data.forEach((response) => {
-          if (this.debug) { console.log(response); }
+          if (this.debug) { console.log(response, response.body.messages); }
           let channel = response.request._rp_options.qs.channel,
               json = response.body;
           this.rankings[channel] = this.generateRankings(json.messages);
@@ -67,6 +69,7 @@ module.exports = class StatBot {
   generateRankings(messages) {
     let rankings = messages.filter(m => TIME_REGEX.test(m.text))
       .map(this.processMessages.bind(this)).sort(this.rankSort.bind(this));
+    return rankings;
   }
 
   processMessages(m) {
@@ -81,8 +84,13 @@ module.exports = class StatBot {
     };
   }
 
-  render(rankings) {
-    return new StatBotRenderer(rankings, this.timeFormat);
+  render(rankingsKey) {
+    let renderer = new StatBotRenderer();
+    renderer.render(this.rankings[rankingsKey])
+      .then(svg => { console.log(svg); return svg2png(Buffer.from(svg)) })
+      .then(buffer => fs.writeFile(`./tmp/${rankingsKey}-${+(new Date())}.png`, buffer))
+      .then(() => console.log('finished writing'))
+      .catch(e => console.error(e));
   }
 
   rankSort(a, b) {
